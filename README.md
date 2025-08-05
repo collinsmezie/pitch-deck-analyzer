@@ -398,5 +398,3 @@ For support or questions:
 ---
 
 **Built with ❤️ using Next.js, TypeScript, OpenAI, and Cursor**
-
-*Last updated: January 2025*
