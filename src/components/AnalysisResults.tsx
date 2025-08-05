@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle, AlertTriangle, MessageCircle, BarChart3, Target, TrendingUp, AlertCircle, ArrowUpRight, Users, DollarSign, Globe, Shield } from 'lucide-react';
+import { CheckCircle, AlertTriangle, MessageCircle, BarChart3, Target, TrendingUp, AlertCircle, ArrowUpRight, Users, DollarSign, Globe, Shield, Eye, Hourglass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Analysis } from '@/types';
@@ -9,9 +9,11 @@ interface AnalysisResultsProps {
   analysis: Analysis;
   onBack: () => void;
   onStartChat: () => void;
+  onStartVisualAnalysis?: () => void;
+  isVisualAnalysisLoading?: boolean;
 }
 
-export default function AnalysisResults({ analysis, onBack, onStartChat }: AnalysisResultsProps) {
+export default function AnalysisResults({ analysis, onBack, onStartChat, onStartVisualAnalysis, isVisualAnalysisLoading }: AnalysisResultsProps) {
   const score = analysis.score?.rating || 0;
   const progressPercentage = (score / 5) * 100;
 
@@ -33,7 +35,7 @@ export default function AnalysisResults({ analysis, onBack, onStartChat }: Analy
   return (
     <div className="relative mt-16">
       {/* Back button */}
-      <div className="absolute -top-18 -left-2">
+      <div className="absolute -top-12 left-0">
         <Button
           variant="ghost"
           onClick={onBack}
@@ -114,12 +116,17 @@ export default function AnalysisResults({ analysis, onBack, onStartChat }: Analy
                     <h3 className="font-medium leading-6">Areas for Improvement</h3>
                   </div>
                   <ul className="space-y-3 ml-7">
-                    {analysis.score.improvements.map((improvement: string, index: number) => (
+                    {analysis.score.improvements.slice(0, 3).map((improvement: string, index: number) => (
                       <li key={index} className="text-sm text-gray-700 list-disc leading-relaxed">
                         {improvement}
                       </li>
                     ))}
                   </ul>
+                  {analysis.score.improvements.length > 3 && (
+                    <p className="text-xs text-gray-500 ml-7">
+                      +{analysis.score.improvements.length - 3} more improvements available
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -130,7 +137,7 @@ export default function AnalysisResults({ analysis, onBack, onStartChat }: Analy
                   <h3 className="font-medium leading-6">Market Analysis</h3>
                 </div>
                 <div className="space-y-2 text-sm text-gray-700 leading-relaxed">
-                  <p>Your solution addresses a growing market with strong demand for AI-powered transcription services. The compliance-driven sectors you're targeting represent a significant opportunity, but competition is intensifying.</p>
+                  <p>Your solution addresses a growing market with strong demand for AI-powered transcription services. The compliance-driven sectors you&apos;re targeting represent a significant opportunity, but competition is intensifying.</p>
                   <div className="flex items-center gap-2 mt-3">
                     <Globe className="h-4 w-4 text-gray-500" />
                     <span className="text-xs text-gray-500">Global market size: $2.5B+</span>
@@ -266,10 +273,36 @@ export default function AnalysisResults({ analysis, onBack, onStartChat }: Analy
             </Button>
             <Button
               variant="outline"
+              className="flex items-center gap-2 group relative overflow-hidden"
+            >
+              <BarChart3 className="h-4 w-4 transition-transform group-hover:scale-110" />
+              <span className="transition-all duration-300 group-hover:opacity-0 group-hover:translate-x-2">
+                Industry Comparison
+              </span>
+              <span className="absolute inset-0 flex items-center justify-center text-gray-600 font-medium opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
+                Coming Soon . . .
+              </span>
+            </Button>
+            <Button
+              onClick={() => {
+                console.log('🎨 Component: Visual Analysis button clicked');
+                if (onStartVisualAnalysis) {
+                  console.log('🎨 Component: Calling visual analysis handler');
+                  onStartVisualAnalysis();
+                } else {
+                  console.log('❌ Component: Visual analysis handler not provided');
+                }
+              }}
+              disabled={isVisualAnalysisLoading}
+              variant="outline"
               className="flex items-center gap-2"
             >
-              <BarChart3 className="h-4 w-4" />
-              Industry Comparison
+              {isVisualAnalysisLoading ? (
+                <Hourglass className="h-4 w-4 animate-spin" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+              {isVisualAnalysisLoading ? 'Analyzing...' : 'Visual Analysis'}
             </Button>
           </div>
         </div>

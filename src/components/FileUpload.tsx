@@ -14,18 +14,51 @@ interface FileUploadProps {
 export default function FileUpload({ onFileUpload, isUploading }: FileUploadProps) {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const getFileTypeError = (file: File) => {
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    const mimeType = file.type;
+    
+    if (mimeType.startsWith('image/')) {
+      return `Images are not supported. Please upload a PDF or PPTX file. (${file.name})`;
+    } else if (mimeType.startsWith('video/')) {
+      return `Video files are not supported. Please upload a PDF or PPTX file. (${file.name})`;
+    } else if (mimeType.startsWith('audio/')) {
+      return `Audio files are not supported. Please upload a PDF or PPTX file. (${file.name})`;
+    } else if (extension === 'doc' || extension === 'docx') {
+      return `Word documents are not supported. Please convert to PDF or PPTX. (${file.name})`;
+    } else if (extension === 'txt') {
+      return `Text files are not supported. Please upload a PDF or PPTX file. (${file.name})`;
+    } else {
+      return `File type not supported. Please upload a PDF or PPTX file. (${file.name})`;
+    }
+  };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (!file) return;
 
+    // Validate file type on client side as well
+    const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'];
+    if (!allowedTypes.includes(file.type)) {
+      console.log('📁 FileUpload: Invalid file type detected:', file.type, file.name);
+      setError(getFileTypeError(file));
+      return;
+    }
+
+    console.log('📁 FileUpload: File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
     setUploadedFile(file);
     setUploadProgress(0);
+    setIsProcessing(true); // Show loading immediately
+    setError(null); // Clear any previous errors
 
     const formData = new FormData();
     formData.append('file', file);
 
     try {
+      console.log('📁 FileUpload: Starting upload process...');
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
@@ -33,14 +66,23 @@ export default function FileUpload({ onFileUpload, isUploading }: FileUploadProp
 
       if (response.ok) {
         const result = await response.json();
+        console.log('📁 FileUpload: Upload successful, calling onFileUpload');
+        setIsProcessing(false); // Clear processing state on success
         onFileUpload(file, result.analysis);
       } else {
-        const error = await response.json();
-        alert(`Upload failed: ${error.error}`);
+        const errorData = await response.json();
+        const errorMessage = errorData.error || 'Upload failed. Please try again.';
+        console.error('📁 FileUpload: Upload failed:', errorMessage);
+        console.log('📁 FileUpload: Setting error state:', errorMessage);
+        setError(errorMessage);
+        setIsProcessing(false); // Clear loading on error
       }
     } catch (error) {
-      console.error('Upload error:', error);
-      alert('Upload failed. Please try again.');
+      console.error('📁 FileUpload: Network error:', error);
+      const networkError = 'Network error. Please check your connection and try again.';
+      console.log('📁 FileUpload: Setting network error state:', networkError);
+      setError(networkError);
+      setIsProcessing(false); // Clear loading on error
     }
   }, [onFileUpload]);
 
@@ -50,12 +92,21 @@ export default function FileUpload({ onFileUpload, isUploading }: FileUploadProp
       'application/pdf': ['.pdf'],
       'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx']
     },
-    multiple: false
+    multiple: false,
+    onDropRejected: (rejectedFiles) => {
+      console.log('📁 FileUpload: File rejected:', rejectedFiles);
+      const rejection = rejectedFiles[0];
+      if (rejection) {
+        console.log('📁 FileUpload: Setting rejection error for file:', rejection.file.name);
+        setError(getFileTypeError(rejection.file));
+      }
+    }
   });
 
   const removeFile = () => {
     setUploadedFile(null);
     setUploadProgress(0);
+    setError(null);
   };
 
   return (
@@ -92,7 +143,10 @@ export default function FileUpload({ onFileUpload, isUploading }: FileUploadProp
                     Drag and drop your pitch deck here, or click to browse
                   </p>
                   <p className="text-xs text-gray-500">
-                    Supports PDF and PPTX files
+                    Supports PDF and PPTX files only
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Images, Word docs, and other formats are not supported
                   </p>
                 </div>
               )}
@@ -113,23 +167,52 @@ export default function FileUpload({ onFileUpload, isUploading }: FileUploadProp
                   variant="ghost"
                   size="sm"
                   onClick={removeFile}
-                  disabled={isUploading}
+                  disabled={isUploading || isProcessing}
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
 
-              {isUploading && (
+              {(isUploading || isProcessing) && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-center space-x-2">
-                    <Hourglass className="h-4 w-4 animate-spin text-blue-500" />
-                    <span className="text-sm">Analyzing your pitch deck...</span>
+                    <Hourglass className="h-4 w-4 animate-spin text-gray-500" />
+                    <span className="text-sm">
+                      {isProcessing && !isUploading ? 'Processing file...' : 'Analyzing your pitch deck...'}
+                    </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                       style={{ width: `${uploadProgress}%` }}
                     />
+                  </div>
+                  {isProcessing && !isUploading && (
+                    <p className="text-xs text-gray-500 text-center">
+                      Preparing your pitch deck for analysis...
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {error && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="w-4 h-4 rounded-full bg-red-500 flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">!</span>
+                    </div>
+                    <span className="text-sm text-red-700 font-medium">Upload Failed</span>
+                  </div>
+                  <p className="text-sm text-red-600 text-center">{error}</p>
+                  <div className="flex justify-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={removeFile}
+                      className="text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      Try Again
+                    </Button>
                   </div>
                 </div>
               )}

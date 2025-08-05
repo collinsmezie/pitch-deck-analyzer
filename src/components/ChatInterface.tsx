@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Send, Hourglass, Bot, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -105,7 +105,7 @@ export default function ChatInterface({ analysis, pitchDeckText }: ChatInterface
 
   useEffect(() => {
     loadRecommendations();
-  }, [analysis]);
+  }, [analysis, messages]);
 
   const loadRecommendations = async () => {
     try {
@@ -178,7 +178,7 @@ export default function ChatInterface({ analysis, pitchDeckText }: ChatInterface
         };
         setMessages(prev => [...prev, errorMessage]);
       }
-    } catch (error) {
+    } catch {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',

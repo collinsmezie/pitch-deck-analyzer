@@ -70,7 +70,7 @@ function generateRecommendations(analysis: Analysis, previousQuestions: string[]
   
   // Web search-based recommendations
   if (analysis.webSearchResults && analysis.webSearchResults.length > 0) {
-    const webSearchRecommendations = getWebSearchRecommendations(analysis.webSearchResults, industry, stage);
+    const webSearchRecommendations = getWebSearchRecommendations(analysis.webSearchResults);
     recommendations.push(...webSearchRecommendations);
   }
   
@@ -167,7 +167,7 @@ function getStageRecommendations(stage: string): string[] {
   ];
 } 
 
-function getWebSearchRecommendations(webSearchResults: any[], industry: string, stage: string): string[] {
+function getWebSearchRecommendations(webSearchResults: Array<{ snippet: string }>): string[] {
   const recommendations: string[] = [];
   
   webSearchResults.forEach(result => {

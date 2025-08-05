@@ -84,7 +84,25 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function analyzePitchDeck(text: string) {
+async function analyzePitchDeck(text: string): Promise<{
+  industry: string;
+  stage: string;
+  valueProposition: string;
+  score: {
+    rating: number;
+    strengths: string[];
+    improvements: string[];
+    overall: string;
+  };
+  webSearchResults: Array<{
+    query: string;
+    title: string;
+    snippet: string;
+    url: string;
+    type: string;
+  }>;
+  timestamp: string;
+}> {
   console.log('🔍 Analysis: Starting pitch deck analysis');
   
   // Extract key information
@@ -124,7 +142,13 @@ async function performWebSearches(industry: string, stage: string) {
     `${industry} startup metrics ${stage} investors look for`
   ];
 
-  const results: any[] = [];
+  const results: Array<{
+    query: string;
+    title: string;
+    snippet: string;
+    url: string;
+    type: string;
+  }> = [];
 
   try {
     // Use a free search API (DuckDuckGo Instant Answer API)
@@ -218,7 +242,13 @@ function extractValueProposition(text: string): string {
   return valueProps.length > 0 ? valueProps[0].trim() : 'Value proposition not clearly stated';
 }
 
-async function generateInvestorReadinessScore(text: string, industry: string, stage: string, webSearchResults: any[]) {
+async function generateInvestorReadinessScore(text: string, industry: string, stage: string, webSearchResults: Array<{
+  query: string;
+  title: string;
+  snippet: string;
+  url: string;
+  type: string;
+}>) {
   console.log('🎯 Score Generation: Starting investor readiness assessment with web search context');
   
   // Simple scoring algorithm based on key indicators and web search insights
@@ -227,7 +257,7 @@ async function generateInvestorReadinessScore(text: string, industry: string, st
   const improvements: string[] = [];
 
   // Analyze web search results for industry-specific insights
-  const industryInsights = analyzeWebSearchResults(webSearchResults, industry, stage);
+  const industryInsights = analyzeWebSearchResults(webSearchResults);
   
   // Add strengths and improvements based on web search insights
   strengths.push(
@@ -263,7 +293,13 @@ async function generateInvestorReadinessScore(text: string, industry: string, st
   };
 }
 
-function analyzeWebSearchResults(webSearchResults: any[], industry: string, stage: string): string[] {
+function analyzeWebSearchResults(webSearchResults: Array<{
+  query: string;
+  title: string;
+  snippet: string;
+  url: string;
+  type: string;
+}>): string[] {
   const improvements: string[] = [];
   
   // Extract insights from web search results
