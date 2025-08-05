@@ -250,7 +250,7 @@ Provides slide-by-slide visual analysis.
 ## 🎨 Design System
 
 ### Frontend Design Rules
-- **Background**: 24px by 24px light grey grid pattern
+- **Background**: Currently applying 18px by 18px light grey grid pattern
 - **Icons**: Lucide React exclusively with Hourglass for loading states
 - **Layout**: Centered content boxes with consistent spacing
 - **Typography**: Geist Sans font, text-sm default, bold titles
