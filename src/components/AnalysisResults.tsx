@@ -138,6 +138,43 @@ export default function AnalysisResults({ analysis, onBack, onStartChat }: Analy
                 </div>
               </div>
 
+              {/* Web Search Insights */}
+              {analysis.webSearchResults && analysis.webSearchResults.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Globe className="h-5 w-5 text-blue-600" />
+                    <h3 className="font-medium leading-6">Real-time Market Insights</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {analysis.webSearchResults.slice(0, 1).map((result, index) => (
+                      <div key={index} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="text-sm font-medium text-blue-900 mb-1">
+                              {result.title}
+                            </h4>
+                            <p className="text-xs text-blue-800 leading-relaxed">
+                              {result.snippet}
+                            </p>
+                          </div>
+                          <div className="ml-2">
+                            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                          </div>
+                        </div>
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                            {result.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          </span>
+                          <span className="text-xs text-blue-500">
+                            Live data
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Financial Metrics */}
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">

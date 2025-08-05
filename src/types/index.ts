@@ -8,7 +8,16 @@ export interface Analysis {
     improvements: string[];
     overall: string;
   };
+  webSearchResults?: WebSearchResult[];
   timestamp: string;
+}
+
+export interface WebSearchResult {
+  query: string;
+  title: string;
+  snippet: string;
+  url: string;
+  type: 'investor_criteria' | 'pitch_deck_requirements' | 'market_research';
 }
 
 export interface ComparisonData {

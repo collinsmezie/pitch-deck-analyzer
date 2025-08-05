@@ -70,7 +70,7 @@ src/
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone git@github.com:collinsmezie/pitch-deck-analyzer.git
    cd pitch-deck-analyzer
    ```
 

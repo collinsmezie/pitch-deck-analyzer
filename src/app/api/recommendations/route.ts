@@ -68,6 +68,12 @@ function generateRecommendations(analysis: Analysis, previousQuestions: string[]
   const stageRecommendations = getStageRecommendations(stage);
   recommendations.push(...stageRecommendations);
   
+  // Web search-based recommendations
+  if (analysis.webSearchResults && analysis.webSearchResults.length > 0) {
+    const webSearchRecommendations = getWebSearchRecommendations(analysis.webSearchResults, industry, stage);
+    recommendations.push(...webSearchRecommendations);
+  }
+  
   // Improvement-based recommendations
   if (analysis.score?.improvements?.length > 0) {
     const improvements = analysis.score.improvements;
@@ -159,4 +165,38 @@ function getStageRecommendations(stage: string): string[] {
     'What metrics are most important for my current stage?',
     'How can I demonstrate readiness for the next funding round?'
   ];
+} 
+
+function getWebSearchRecommendations(webSearchResults: any[], industry: string, stage: string): string[] {
+  const recommendations: string[] = [];
+  
+  webSearchResults.forEach(result => {
+    const snippet = result.snippet.toLowerCase();
+    
+    if (snippet.includes('unit economics')) {
+      recommendations.push('How can I better present my unit economics to investors?');
+    }
+    
+    if (snippet.includes('market size')) {
+      recommendations.push('What market size analysis would be most compelling for my industry?');
+    }
+    
+    if (snippet.includes('competitive')) {
+      recommendations.push('How can I better differentiate from competitors in my market?');
+    }
+    
+    if (snippet.includes('team')) {
+      recommendations.push('What team credentials are most important for my industry and stage?');
+    }
+    
+    if (snippet.includes('traction')) {
+      recommendations.push('What traction metrics are most relevant for my industry?');
+    }
+    
+    if (snippet.includes('go-to-market')) {
+      recommendations.push('How can I improve my go-to-market strategy presentation?');
+    }
+  });
+  
+  return recommendations;
 } 

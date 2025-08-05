@@ -45,30 +45,33 @@ export async function POST(request: NextRequest) {
 function createContext(pitchDeckText: string, analysis: Analysis): string {
   console.log('🔧 Context Creation: Building context for AI response');
   
-  let context = `Pitch Deck Analysis Context:\n\n`;
+  let context = `Pitch Deck Analysis:\n`;
   
   if (analysis) {
     context += `Industry: ${analysis.industry}\n`;
-    context += `Company Stage: ${analysis.stage}\n`;
-    context += `Value Proposition: ${analysis.valueProposition}\n`;
-    context += `Investor Readiness Score: ${analysis.score?.rating}/5.0\n`;
-    context += `Overall Assessment: ${analysis.score?.overall}\n\n`;
+    context += `Stage: ${analysis.stage}\n`;
+    context += `Score: ${analysis.score?.rating}/5.0 (${analysis.score?.overall})\n`;
     
     if (analysis.score?.strengths?.length > 0) {
-      context += `Strengths:\n${analysis.score.strengths.map((s: string) => `- ${s}`).join('\n')}\n\n`;
+      context += `Strengths: ${analysis.score.strengths.slice(0, 3).join('; ')}\n`;
     }
     
     if (analysis.score?.improvements?.length > 0) {
-      context += `Areas for Improvement:\n${analysis.score.improvements.map((i: string) => `- ${i}`).join('\n')}\n\n`;
+      context += `Improvements: ${analysis.score.improvements.slice(0, 3).join('; ')}\n`;
+    }
+
+    // Add web search insights to context (limited to 2 results)
+    if (analysis.webSearchResults && analysis.webSearchResults.length > 0) {
+      context += `Market Insights: ${analysis.webSearchResults.slice(0, 2).map(r => r.snippet.substring(0, 150)).join('; ')}\n`;
     }
   }
   
-  // Add relevant pitch deck content (first 2000 characters to stay within limits)
+  // Add relevant pitch deck content (limited to 1000 characters)
   if (pitchDeckText) {
-    context += `Pitch Deck Content (excerpt):\n${pitchDeckText.substring(0, 2000)}...\n\n`;
+    context += `Content: ${pitchDeckText.substring(0, 1000)}...\n`;
   }
   
-  context += `Instructions: Provide specific, actionable advice based on the pitch deck analysis. Focus on practical recommendations that can improve investor readiness.`;
+  context += `Provide specific, actionable advice. Be comprehensive but concise.`;
   
   console.log(`🔧 Context Creation: Created context with ${context.length} characters`);
   
@@ -84,18 +87,24 @@ async function generateResponse(question: string, context: string): Promise<stri
       messages: [
         {
           role: 'system',
-          content: `You are an expert startup advisor and investor relations specialist. You help founders improve their pitch decks and investor readiness. Always provide specific, actionable advice based on the context provided. Be encouraging but honest about areas that need improvement.`
+          content: `You are an expert startup advisor and investor relations specialist. You help founders improve their pitch decks and investor readiness. Always provide specific, actionable advice based on the context provided. Be encouraging but honest about areas that need improvement. Keep responses comprehensive but concise. Always complete your thoughts and provide actionable next steps.`
         },
         {
           role: 'user',
           content: `Context:\n${context}\n\nQuestion: ${question}`
         }
       ],
-      max_completion_tokens: 500,
+      max_tokens: 1000,
       temperature: 0.7
     });
 
-    const response = completion.choices[0]?.message?.content || 'Unable to generate response';
+    let response = completion.choices[0]?.message?.content || 'Unable to generate response';
+    
+    // Check if response was truncated
+    if (completion.choices[0]?.finish_reason === 'length') {
+      console.log('⚠️ AI Response: Response was truncated, attempting to complete');
+      response += '\n\n[Response was cut off due to length. Please ask a follow-up question for more details.]';
+    }
     
     console.log(`🤖 AI Response: Generated response with ${response.length} characters`);
     
