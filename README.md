@@ -247,7 +247,7 @@ Provides slide-by-slide visual analysis.
 }
 ```
 
-## 🎨 Design System
+## 🎨 Design System (Provided By Developer Handbook)
 
 ### Frontend Design Rules
 - **Background**: Currently applying 18px by 18px light grey grid pattern
